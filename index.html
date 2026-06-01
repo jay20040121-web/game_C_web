@@ -25,7 +25,13 @@
           <div id="unity-build-title">UnityProject</div>
         </div>
       </div>
-      <div id="orientation-lock">請將裝置轉為橫向遊玩</div>
+      <div id="orientation-lock">
+        <div class="orientation-panel">
+          <div class="orientation-title">請將裝置轉為橫向遊玩</div>
+          <button id="landscape-play-button" type="button">全螢幕橫向遊玩</button>
+          <div id="landscape-status">若無法自動旋轉，請關閉手機方向鎖定後再將手機橫放。</div>
+        </div>
+      </div>
     </div>
     <script>
       const canvas = document.querySelector("#unity-canvas");
@@ -49,6 +55,33 @@
       window.addEventListener("resize", resizeGame);
       window.addEventListener("orientationchange", resizeGame);
       resizeGame();
+
+      async function requestLandscapePlay() {
+        const status = document.querySelector("#landscape-status");
+        const root = document.documentElement;
+        try {
+          if (!document.fullscreenElement) {
+            if (root.requestFullscreen) {
+              await root.requestFullscreen();
+            } else if (root.webkitRequestFullscreen) {
+              await root.webkitRequestFullscreen();
+            }
+          }
+
+          if (screen.orientation && screen.orientation.lock) {
+            await screen.orientation.lock("landscape");
+            status.textContent = "已嘗試切換為橫向。若畫面仍未旋轉，請將手機橫放。";
+          } else {
+            status.textContent = "此瀏覽器不支援自動鎖定橫向，請手動將手機橫放。";
+          }
+        } catch (error) {
+          status.textContent = "此瀏覽器無法自動鎖定橫向，請關閉方向鎖定並手動將手機橫放。";
+        } finally {
+          setTimeout(resizeGame, 250);
+        }
+      }
+
+      document.querySelector("#landscape-play-button").addEventListener("click", requestLandscapePlay);
 
       function unityShowBanner(msg, type) {
         const warningBanner = document.querySelector("#unity-warning");
